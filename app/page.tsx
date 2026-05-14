@@ -1,65 +1,238 @@
-import Image from "next/image";
+"use client";
+
+import { motion } from "framer-motion";
+import {
+  Star,
+  MapPin,
+  Clock3,
+} from "lucide-react";
+
+import Navbar from "./components/navbar";
+import Footer from "./components/footer";
+
+import {
+  menus,
+  gallery,
+} from "./data/data";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="bg-[#F8FAFC] text-[#1E293B] overflow-hidden">
+      {/* NAVBAR */}
+      <Navbar />
+
+      {/* HERO */}
+      <section
+        id="home"
+        className="min-h-screen flex items-center pt-24"
+      >
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center">
+          {/* LEFT */}
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <p className="text-[#2563EB] font-semibold mb-4 tracking-widest">
+              Warkop Biru Bunga
+            </p>
+
+            <h1 className="text-5xl lg:text-7xl font-bold leading-tight mb-6">
+              Kerabat Dekat
+              <span className="text-[#2563EB]">
+                {" "}Kamu{" "}
+              </span>
+              Sejak 2022
+            </h1>
+
+            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+              Open daily from 14.00 to 23.30 ,
+              Warkop Biru Bunga is your.
+              <br />
+              (23.00 Close Order)
+            </p>
+
+            <div className="flex gap-4 flex-wrap">
+              <a
+                href="/menu"
+                className="bg-[#2563EB] text-white px-7 py-4 rounded-full hover:scale-105 transition duration-300 shadow-xl inline-block"
+              >
+                Explore Menu
+              </a>
+
+              <a
+                href="https://maps.app.goo.gl/KFNCtFVvszLWSxKJ6"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-[#2563EB] px-7 py-4 rounded-full hover:bg-[#2563EB] hover:text-white transition duration-300"
+              >
+                Visit Cafe
+              </a>
+            </div>
+          </motion.div>
+
+          {/* RIGHT IMAGE */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1 }}
+            className="relative"
+          >
+            <img
+              src="/main.jpg"
+              alt="coffee"
+              className="rounded-[40px] shadow-2xl object-cover h-[550px] w-full"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+            {/* FLOATING CARD */}
+            <div className="absolute -bottom-6 -left-6 bg-white p-5 rounded-3xl shadow-2xl">
+              <div className="flex items-center gap-3">
+                <Star className="fill-yellow-400 text-yellow-400" />
+
+                <div>
+                  <p className="font-bold">
+                    4.9 Rating
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    Favorite Coffee Shop
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* MENU */}
+      <section id="menu" className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* TITLE */}
+          <div className="text-center mb-16">
+            <p className="text-[#2563EB] font-semibold tracking-widest">
+              BEST SELLER MENU
+            </p>
+
+            <h2 className="text-4xl font-bold mt-3">
+              Our Popular Drinks
+            </h2>
+          </div>
+
+          {/* CARDS */}
+          <div className="grid md:grid-cols-3 gap-8">
+            {menus.map((menu, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="bg-white rounded-[35px] overflow-hidden shadow-lg hover:shadow-2xl"
+              >
+                <img
+                  src={menu.image}
+                  alt={menu.name}
+                  className="h-72 w-full object-cover"
+                />
+
+                <div className="p-6">
+                  <h3 className="text-2xl font-bold mb-2">
+                    {menu.name}
+                  </h3>
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-[#2563EB] font-bold text-xl">
+                      {menu.price}
+                    </p>
+
+                    <button className="bg-[#2563EB] text-white px-5 py-2 rounded-full hover:scale-105 transition">
+                      Order
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT */}
+      <section
+        id="about"
+        className="py-24 bg-[#DBEAFE]"
+      >
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-14 items-center">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="rounded-[40px] shadow-2xl object-cover h-[550px] w-full"
+          >
+            <source src="/vid.mp4" type="video/mp4" />
+          </video>
+
+          {/* CONTENT */}
+          <div>
+            <p className="text-[#2563EB] font-semibold mb-4 tracking-widest">
+              ABOUT US
+            </p>
+
+            <h2 className="text-5xl font-bold leading-tight mb-6">
+              Cozy Place To Relax & Enjoy
+            </h2>
+
+            <p className="text-lg text-slate-600 leading-relaxed mb-8">
+              Warkop Biru langit menghadirkan suasana santai
+              dengan gaya minimalis dengan pemandangan danau
+              dan senja disore hari.
+            </p>
+
+            <div className="space-y-5">
+              <div className="flex gap-4 items-center">
+                <MapPin className="text-[#2563EB]" />
+                <p>Jakarta, Indonesia 12630</p>
+              </div>
+
+              <div className="flex gap-4 items-center">
+                <Clock3 className="text-[#2563EB]" />
+                <p>Open Everyday • 14.00 - 23.30</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* GALLERY */}
+      <section id="gallery" className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* TITLE */}
+          <div className="text-center mb-16">
+            <p className="text-[#2563EB] font-semibold tracking-widest">
+              GALLERY
+            </p>
+
+            <h2 className="text-4xl font-bold mt-3">
+              Our Cafe Moments
+            </h2>
+          </div>
+
+          {/* GRID */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {gallery.map((image, index) => (
+              <motion.img
+                key={index}
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.3 }}
+                src={image}
+                alt="gallery"
+                className="rounded-[30px] h-[350px] w-full object-cover shadow-lg"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <Footer />
+    </main>
   );
 }
