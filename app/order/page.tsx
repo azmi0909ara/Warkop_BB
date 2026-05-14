@@ -1,6 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  collection,
+  onSnapshot,
+} from "firebase/firestore";
 
 import {
   Search,
@@ -14,9 +22,10 @@ import TableSelector from "../components/order/table-selector";
 import MenuCard from "../components/order/menu-card";
 import OrderSummary from "../components/order/order-summary";
 
-import { menus } from "../data/order-data";
+import { db } from "../lib/firebase";
 
 export default function OrderPage() {
+  // CUSTOMER INFO
   const [table, setTable] =
     useState("01");
 
@@ -31,6 +40,7 @@ export default function OrderPage() {
   const [service, setService] =
     useState("Dine In");
 
+  // SEARCH + FILTER
   const [search, setSearch] =
     useState("");
 
@@ -39,6 +49,11 @@ export default function OrderPage() {
     setSelectedCategory,
   ] = useState("All");
 
+  // MENU
+  const [menus, setMenus] =
+    useState<any[]>([]);
+
+  // CART
   const [cart, setCart] =
     useState<any[]>([]);
 
@@ -46,10 +61,41 @@ export default function OrderPage() {
   const [openCart, setOpenCart] =
     useState(false);
 
-  // ADD CART
-  const addToCart = (menu: any) => {
+  // GET MENU REALTIME
+  useEffect(() => {
+    const unsubscribe =
+      onSnapshot(
+        collection(db, "menus"),
+        (snapshot) => {
+          const data =
+            snapshot.docs.map(
+              (doc, index) => ({
+                id:
+                  doc.id ||
+                  index,
+
+                firestoreId:
+                  doc.id,
+
+                ...doc.data(),
+              })
+            );
+
+          setMenus(data);
+        }
+      );
+
+    return () =>
+      unsubscribe();
+  }, []);
+
+  // ADD TO CART
+  const addToCart = (
+    menu: any
+  ) => {
     const exist = cart.find(
-      (item) => item.id === menu.id
+      (item) =>
+        item.id === menu.id
     );
 
     if (exist) {
@@ -58,7 +104,8 @@ export default function OrderPage() {
           item.id === menu.id
             ? {
                 ...item,
-                qty: item.qty + 1,
+                qty:
+                  item.qty + 1,
               }
             : item
         )
@@ -83,7 +130,8 @@ export default function OrderPage() {
         item.id === id
           ? {
               ...item,
-              qty: item.qty + 1,
+              qty:
+                item.qty + 1,
             }
           : item
       )
@@ -100,12 +148,14 @@ export default function OrderPage() {
           item.id === id
             ? {
                 ...item,
-                qty: item.qty - 1,
+                qty:
+                  item.qty - 1,
               }
             : item
         )
         .filter(
-          (item) => item.qty > 0
+          (item) =>
+            item.qty > 0
         )
     );
   };
@@ -116,7 +166,8 @@ export default function OrderPage() {
   ) => {
     setCart(
       cart.filter(
-        (item) => item.id !== id
+        (item) =>
+          item.id !== id
       )
     );
   };
@@ -129,12 +180,12 @@ export default function OrderPage() {
     0
   );
 
-  // FILTER
+  // FILTER MENU
   const filteredMenus =
     menus.filter((menu) => {
       const matchSearch =
         menu.name
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(
             search.toLowerCase()
           );
@@ -153,132 +204,149 @@ export default function OrderPage() {
     });
 
   return (
-    <main className="bg-[#F8FAFC] min-h-screen text-[#1E293B]">
-      <Navbar />
+    <main className="relative bg-[#F8FAFC] min-h-screen text-[#1E293B] overflow-hidden">
+      {/* BACKGROUND BLOBS */}
+      <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-blue-200/40 rounded-full blur-3xl" />
 
-      <section className="pt-24 pb-24">
-        <div className="max-w-7xl mx-auto px-4 md:px-5">
-          {/* TABLE */}
-          <TableSelector
-            customerName={
-              customerName
-            }
-            setCustomerName={
-              setCustomerName
-            }
-            table={table}
-            setTable={setTable}
-            people={people}
-            setPeople={setPeople}
-            service={service}
-            setService={setService}
-          />
+      <div className="absolute top-[30%] right-0 w-[350px] h-[350px] bg-sky-200/30 rounded-full blur-3xl" />
 
-          {/* MAIN */}
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
-            {/* LEFT */}
-            <div>
-              {/* SEARCH */}
-              <div className="bg-white rounded-2xl p-3 shadow-md border border-blue-100 mb-5 flex items-center gap-3">
-                <Search className="text-[#2563EB] min-w-[20px]" />
+      <div className="absolute bottom-0 left-[20%] w-[250px] h-[250px] bg-indigo-200/30 rounded-full blur-3xl" />
 
-                <input
-                  type="text"
-                  placeholder="Cari menu favorit..."
-                  value={search}
-                  onChange={(e) =>
-                    setSearch(
-                      e.target.value
-                    )
-                  }
-                  className="w-full outline-none bg-transparent text-[#1E293B] placeholder:text-slate-400 text-sm"
-                />
-              </div>
+      {/* GRADIENT */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
 
-              {/* CATEGORY */}
-              <div className="flex gap-3 mb-5 overflow-x-auto pb-1">
-                {[
-                  "All",
-                  "Coffee",
-                  "Non Coffee",
-                  "Snack",
-                ].map((item) => (
-                  <button
-                    key={item}
-                    onClick={() =>
-                      setSelectedCategory(
-                        item
+      {/* CONTENT */}
+      <div className="relative z-10">
+        <Navbar />
+
+        <section className="pt-24 pb-24">
+          <div className="max-w-7xl mx-auto px-4 md:px-5">
+            {/* TABLE */}
+            <TableSelector
+              customerName={
+                customerName
+              }
+              setCustomerName={
+                setCustomerName
+              }
+              table={table}
+              setTable={setTable}
+              people={people}
+              setPeople={setPeople}
+              service={service}
+              setService={
+                setService
+              }
+            />
+
+            {/* MAIN */}
+            <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] gap-6">
+              {/* LEFT */}
+              <div>
+                {/* SEARCH */}
+                <div className="bg-white/80 backdrop-blur-md rounded-2xl p-3 shadow-md border border-white/50 mb-5 flex items-center gap-3">
+                  <Search className="text-[#2563EB] min-w-[20px]" />
+
+                  <input
+                    type="text"
+                    placeholder="Cari menu favorit..."
+                    value={search}
+                    onChange={(e) =>
+                      setSearch(
+                        e.target.value
                       )
                     }
-                    className={`px-4 py-2 text-sm rounded-full whitespace-nowrap transition ${
-                      selectedCategory ===
-                      item
-                        ? "bg-[#2563EB] text-white shadow-md"
-                        : "bg-white border border-blue-100 text-slate-600"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
+                    className="w-full outline-none bg-transparent text-[#1E293B] placeholder:text-slate-400 text-sm"
+                  />
+                </div>
 
-              {/* MENU GRID */}
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                {/* EMPTY */}
-                {filteredMenus.length ===
-                  0 && (
-                  <div className="col-span-full bg-white rounded-2xl p-10 text-center border border-blue-100 shadow-md text-slate-400">
-                    Menu tidak ditemukan
-                  </div>
-                )}
-
-                {/* MENU */}
-                {filteredMenus.map(
-                  (menu) => (
-                    <MenuCard
-                      key={menu.id}
-                      menu={menu}
-                      addToCart={
-                        addToCart
+                {/* CATEGORY */}
+                <div className="flex gap-3 mb-5 overflow-x-auto pb-1">
+                  {[
+                    "All",
+                    "Coffee",
+                    "Non Coffee",
+                    "Snack",
+                  ].map((item) => (
+                    <button
+                      key={item}
+                      onClick={() =>
+                        setSelectedCategory(
+                          item
+                        )
                       }
-                    />
-                  )
-                )}
-              </div>
-            </div>
+                      className={`px-4 py-2 text-sm rounded-full whitespace-nowrap transition ${
+                        selectedCategory ===
+                        item
+                          ? "bg-[#2563EB] text-white shadow-lg"
+                          : "bg-white/80 backdrop-blur-md border border-white/50 text-slate-600"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
 
-            {/* DESKTOP CART */}
-            <div className="hidden xl:block">
-              <OrderSummary
-                customerName={
-                  customerName
-                }
-                cart={cart}
-                subtotal={subtotal}
-                service={service}
-                table={table}
-                people={people}
-                increaseQty={
-                  increaseQty
-                }
-                decreaseQty={
-                  decreaseQty
-                }
-                removeItem={
-                  removeItem
-                }
-              />
+                {/* MENU GRID */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                  {/* EMPTY */}
+                  {filteredMenus.length ===
+                    0 && (
+                    <div className="col-span-full bg-white/80 backdrop-blur-md rounded-2xl p-10 text-center border border-white/50 shadow-md text-slate-400">
+                      Menu tidak ditemukan
+                    </div>
+                  )}
+
+                  {/* MENU */}
+                  {filteredMenus.map(
+                    (menu) => (
+                      <MenuCard
+                        key={
+                          menu.firestoreId
+                        }
+                        menu={menu}
+                        addToCart={
+                          addToCart
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* DESKTOP CART */}
+              <div className="hidden xl:block">
+                <OrderSummary
+                  customerName={
+                    customerName
+                  }
+                  cart={cart}
+                  subtotal={subtotal}
+                  service={service}
+                  table={table}
+                  people={people}
+                  increaseQty={
+                    increaseQty
+                  }
+                  decreaseQty={
+                    decreaseQty
+                  }
+                  removeItem={
+                    removeItem
+                  }
+                />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* MOBILE FLOATING CART */}
       <button
         onClick={() =>
           setOpenCart(true)
         }
-        className="xl:hidden fixed bottom-5 right-5 z-50 w-16 h-16 rounded-full bg-[#2563EB] text-white shadow-2xl flex items-center justify-center"
+        className="xl:hidden fixed bottom-5 right-5 z-50 w-16 h-16 rounded-full bg-gradient-to-r from-[#2563EB] to-blue-500 text-white shadow-2xl flex items-center justify-center hover:scale-105 transition"
       >
         <div className="relative">
           <ShoppingBag size={24} />
@@ -304,7 +372,7 @@ export default function OrderPage() {
           onClick={() =>
             setOpenCart(false)
           }
-          className="absolute inset-0 bg-black/40"
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         />
 
         {/* DRAWER */}

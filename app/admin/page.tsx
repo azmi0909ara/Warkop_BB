@@ -25,6 +25,7 @@ import {
 import {
   LogOut,
   Search,
+  UtensilsCrossed,
 } from "lucide-react";
 
 import * as XLSX from "xlsx";
@@ -298,8 +299,16 @@ export default function AdminPage() {
     ).length;
 
   return (
-    <main className="bg-[#F8FAFC] min-h-screen text-[#1E293B] overflow-hidden">
-      <section className="py-6 md:py-10">
+    <main className="relative bg-[#F8FAFC] min-h-screen text-[#1E293B] overflow-hidden">
+      {/* BACKGROUND */}
+      <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-blue-200/40 rounded-full blur-3xl" />
+
+      <div className="absolute top-[30%] right-0 w-[350px] h-[350px] bg-sky-200/30 rounded-full blur-3xl" />
+
+      <div className="absolute bottom-0 left-[20%] w-[250px] h-[250px] bg-indigo-200/30 rounded-full blur-3xl" />
+
+      {/* CONTENT */}
+      <section className="relative z-10 py-6 md:py-10">
         <div className="max-w-7xl mx-auto px-4 md:px-5">
           {/* HEADER */}
           <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-8">
@@ -314,14 +323,15 @@ export default function AdminPage() {
               </h1>
 
               <p className="text-slate-500 mt-3 text-sm md:text-base">
-                Kelola order realtime cafe
+                Kelola order realtime
+                cafe
               </p>
             </div>
 
             {/* RIGHT */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full xl:w-auto">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full xl:w-auto">
               {/* ADMIN INFO */}
-              <div className="bg-white border border-blue-100 shadow-md rounded-2xl px-5 py-4 w-full sm:w-auto">
+              <div className="bg-white/80 backdrop-blur-md border border-white/50 shadow-md rounded-2xl px-5 py-4 w-full sm:w-auto">
                 <p className="text-sm text-slate-500 mb-1">
                   Logged in as
                 </p>
@@ -331,9 +341,29 @@ export default function AdminPage() {
                 </h3>
               </div>
 
+              {/* MENU MANAGEMENT */}
+              <button
+                onClick={() =>
+                  router.push(
+                    "/admin/menu"
+                  )
+                }
+                className="bg-[#2563EB] hover:bg-blue-700 text-white px-5 py-4 rounded-2xl shadow-md transition flex items-center justify-center gap-3"
+              >
+                <UtensilsCrossed
+                  size={18}
+                />
+
+                <span>
+                  Manage Menu
+                </span>
+              </button>
+
               {/* LOGOUT */}
               <button
-                onClick={handleLogout}
+                onClick={
+                  handleLogout
+                }
                 className="bg-red-500 hover:bg-red-600 text-white px-5 py-4 rounded-2xl shadow-md transition flex items-center justify-center gap-3"
               >
                 <LogOut size={18} />
@@ -363,7 +393,9 @@ export default function AdminPage() {
 
             <StatsCard
               title="Processing"
-              value={String(processing)}
+              value={String(
+                processing
+              )}
               color="text-blue-500"
             />
 
@@ -375,7 +407,7 @@ export default function AdminPage() {
           </div>
 
           {/* SEARCH */}
-          <div className="bg-white border border-blue-100 shadow-md rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
+          <div className="bg-white/80 backdrop-blur-md border border-white/50 shadow-md rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
             <Search className="text-[#2563EB] min-w-[20px]" />
 
             <input
@@ -394,7 +426,9 @@ export default function AdminPage() {
           {/* ACTION */}
           <div className="flex flex-col md:flex-row gap-3 mb-5">
             <button
-              onClick={exportToExcel}
+              onClick={
+                exportToExcel
+              }
               className="bg-[#2563EB] hover:bg-blue-700 text-white px-5 py-3 rounded-2xl shadow-md transition font-medium w-full md:w-auto"
             >
               Export Excel
@@ -429,7 +463,7 @@ export default function AdminPage() {
                   filterStatus ===
                   status
                     ? "bg-[#2563EB] text-white shadow-md"
-                    : "bg-white border border-blue-100 text-slate-600 hover:border-[#2563EB]"
+                    : "bg-white/80 backdrop-blur-md border border-white/50 text-slate-600 hover:border-[#2563EB]"
                 }`}
               >
                 {status}
@@ -444,7 +478,7 @@ export default function AdminPage() {
               {/* EMPTY */}
               {filteredOrders.length ===
                 0 && (
-                <div className="bg-white rounded-[28px] p-10 text-center shadow-md border border-blue-100 text-slate-400">
+                <div className="bg-white/80 backdrop-blur-md rounded-[28px] p-10 text-center shadow-md border border-white/50 text-slate-400">
                   Belum ada order
                 </div>
               )}
@@ -474,7 +508,9 @@ export default function AdminPage() {
             {/* RIGHT */}
             <div className="order-1 xl:order-2 xl:sticky xl:top-6 h-fit">
               <OrderDetail
-                order={selectedOrder}
+                order={
+                  selectedOrder
+                }
               />
             </div>
           </div>
