@@ -10,8 +10,6 @@ import {
   onSnapshot,
   orderBy,
   query,
-  deleteDoc,
-  doc,
 } from "firebase/firestore";
 
 import {
@@ -22,26 +20,23 @@ import {
   signOut,
 } from "firebase/auth";
 
-import {
-  LogOut,
-  Search,
-  UtensilsCrossed,
-} from "lucide-react";
-
 import * as XLSX from "xlsx";
-
 import { saveAs } from "file-saver";
-
-import { useAuth } from "../context/auth-context";
-
-import StatsCard from "../components/admin/stats-card";
-import OrderCard from "../components/admin/order-card";
-import OrderDetail from "../components/admin/order-detail";
 
 import {
   db,
   auth,
 } from "../lib/firebase";
+
+import { useAuth } from "../context/auth-context";
+
+import AdminHeader from "../components/admin/admin-header";
+import AdminSearch from "../components/admin/admin-search";
+import AdminActions from "../components/admin/admin-actions";
+import AdminFilter from "../components/admin/admin-filter";
+import OrderList from "../components/admin/order-list";
+import OrderDetail from "../components/admin/order-detail";
+import StatsCard from "../components/admin/stats-card";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -75,55 +70,45 @@ export default function AdminPage() {
       }
     };
 
-  // CLEAR DONE ORDERS
-  const clearDoneOrders =
-    async () => {
-      const doneOrders =
-        orders.filter(
-          (order) =>
-            order.status === "Done"
-        );
+  // RESET DETAIL
+  useEffect(() => {
+    setSelectedOrder(null);
+  }, [filterStatus, search]);
 
-      if (
-        doneOrders.length === 0
-      ) {
-        alert(
-          "Tidak ada order selesai"
-        );
-        return;
-      }
+  // AUTH
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login");
+    }
+  }, [loading, user]);
 
-      const confirmClear =
-        confirm(
-          `Hapus ${doneOrders.length} order selesai?`
-        );
+  // FIREBASE
+  useEffect(() => {
+    const q = query(
+      collection(db, "orders"),
+      orderBy("createdAt", "desc")
+    );
 
-      if (!confirmClear) return;
+    const unsubscribe =
+      onSnapshot(
+        q,
+        (snapshot) => {
+          const data =
+            snapshot.docs.map(
+              (doc) => ({
+                firestoreId:
+                  doc.id,
+                ...doc.data(),
+              })
+            );
 
-      try {
-        await Promise.all(
-          doneOrders.map((order) =>
-            deleteDoc(
-              doc(
-                db,
-                "orders",
-                order.firestoreId
-              )
-            )
-          )
-        );
+          setOrders(data);
+        }
+      );
 
-        alert(
-          "Order selesai berhasil dibersihkan"
-        );
-      } catch (error) {
-        console.error(error);
-
-        alert(
-          "Gagal menghapus order selesai"
-        );
-      }
-    };
+    return () =>
+      unsubscribe();
+  }, []);
 
   // EXPORT EXCEL
   const exportToExcel =
@@ -143,7 +128,8 @@ export default function AdminPage() {
           Customer:
             order.customerName,
 
-          Table: order.table,
+          Table:
+            order.table,
 
           People:
             order.people,
@@ -151,7 +137,8 @@ export default function AdminPage() {
           Service:
             order.service,
 
-          Total: order.total,
+          Total:
+            order.total,
 
           Status:
             order.status,
@@ -194,69 +181,12 @@ export default function AdminPage() {
       );
     };
 
-  // AUTH PROTECTION
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/login");
-    }
-  }, [user, loading]);
-
-  // REALTIME FIREBASE
-  useEffect(() => {
-    const q = query(
-      collection(db, "orders"),
-      orderBy("createdAt", "desc")
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const data = snapshot.docs.map(
-          (doc) => ({
-            firestoreId: doc.id,
-            ...doc.data(),
-          })
-        );
-
-        setOrders(data);
-
-        if (
-          data.length > 0 &&
-          !selectedOrder
-        ) {
-          setSelectedOrder(data[0]);
-        }
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-  // LOADING
-  if (loading) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
-        <div className="text-center">
-          <div className="w-14 h-14 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-
-          <p className="text-slate-500">
-            Loading...
-          </p>
-        </div>
-      </main>
-    );
-  }
-
-  // NOT LOGIN
-  if (!user) {
-    return null;
-  }
-
-  // FILTER + SEARCH
+  // FILTER
   const filteredOrders =
     orders.filter((order) => {
       const matchStatus =
-        filterStatus === "All"
+        filterStatus ===
+        "All"
           ? true
           : order.status ===
             filterStatus;
@@ -267,13 +197,19 @@ export default function AdminPage() {
       const matchSearch =
         order.orderId
           ?.toLowerCase()
-          .includes(keyword) ||
+          .includes(
+            keyword
+          ) ||
         order.customerName
           ?.toLowerCase()
-          .includes(keyword) ||
+          .includes(
+            keyword
+          ) ||
         order.table
           ?.toLowerCase()
-          .includes(keyword);
+          .includes(
+            keyword
+          );
 
       return (
         matchStatus &&
@@ -284,22 +220,35 @@ export default function AdminPage() {
   // STATS
   const pending =
     orders.filter(
-      (o) => o.status === "Pending"
+      (o) =>
+        o.status ===
+        "Pending"
     ).length;
 
   const processing =
     orders.filter(
       (o) =>
-        o.status === "Processing"
+        o.status ===
+        "Processing"
     ).length;
 
-  const done =
-    orders.filter(
-      (o) => o.status === "Done"
-    ).length;
+  const activeOrders =
+    pending + processing;
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        Loading...
+      </main>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <main className="relative bg-[#F8FAFC] min-h-screen text-[#1E293B] overflow-hidden">
+    <main className="relative bg-[#F8FAFC] min-h-screen overflow-hidden">
       {/* BACKGROUND */}
       <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-blue-200/40 rounded-full blur-3xl" />
 
@@ -307,73 +256,26 @@ export default function AdminPage() {
 
       <div className="absolute bottom-0 left-[20%] w-[250px] h-[250px] bg-indigo-200/30 rounded-full blur-3xl" />
 
-      {/* CONTENT */}
       <section className="relative z-10 py-6 md:py-10">
         <div className="max-w-7xl mx-auto px-4 md:px-5">
+
           {/* HEADER */}
-          <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-8">
-            {/* LEFT */}
-            <div>
-              <p className="text-[#2563EB] font-medium mb-2 tracking-[0.2em] uppercase text-sm">
-                Warkop Biru Bunga
-              </p>
-
-              <h1 className="text-3xl md:text-5xl font-black leading-tight">
-                Admin Dashboard
-              </h1>
-
-              <p className="text-slate-500 mt-3 text-sm md:text-base">
-                Kelola order realtime
-                cafe
-              </p>
-            </div>
-
-            {/* RIGHT */}
-            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full xl:w-auto">
-              {/* ADMIN INFO */}
-              <div className="bg-white/80 backdrop-blur-md border border-white/50 shadow-md rounded-2xl px-5 py-4 w-full sm:w-auto">
-                <p className="text-sm text-slate-500 mb-1">
-                  Logged in as
-                </p>
-
-                <h3 className="font-semibold text-sm md:text-base break-all">
-                  {user.email}
-                </h3>
-              </div>
-
-              {/* MENU MANAGEMENT */}
-              <button
-                onClick={() =>
-                  router.push(
-                    "/admin/menu"
-                  )
-                }
-                className="bg-[#2563EB] hover:bg-blue-700 text-white px-5 py-4 rounded-2xl shadow-md transition flex items-center justify-center gap-3"
-              >
-                <UtensilsCrossed
-                  size={18}
-                />
-
-                <span>
-                  Manage Menu
-                </span>
-              </button>
-
-              {/* LOGOUT */}
-              <button
-                onClick={
-                  handleLogout
-                }
-                className="bg-red-500 hover:bg-red-600 text-white px-5 py-4 rounded-2xl shadow-md transition flex items-center justify-center gap-3"
-              >
-                <LogOut size={18} />
-
-                <span>
-                  Logout
-                </span>
-              </button>
-            </div>
-          </div>
+          <AdminHeader
+            email={user.email}
+            onLogout={
+              handleLogout
+            }
+            onMenu={() =>
+              router.push(
+                "/admin/menu"
+              )
+            }
+            onHistory={() =>
+              router.push(
+                "/admin/history"
+              )
+            }
+          />
 
           {/* STATS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
@@ -387,7 +289,9 @@ export default function AdminPage() {
 
             <StatsCard
               title="Pending"
-              value={String(pending)}
+              value={String(
+                pending
+              )}
               color="text-yellow-500"
             />
 
@@ -400,119 +304,83 @@ export default function AdminPage() {
             />
 
             <StatsCard
-              title="Done"
-              value={String(done)}
+              title="Active Orders"
+              value={String(
+                activeOrders
+              )}
               color="text-green-500"
             />
           </div>
 
           {/* SEARCH */}
-          <div className="bg-white/80 backdrop-blur-md border border-white/50 shadow-md rounded-2xl px-5 py-4 mb-6 flex items-center gap-3">
-            <Search className="text-[#2563EB] min-w-[20px]" />
-
-            <input
-              type="text"
-              placeholder="Cari order, customer, atau meja..."
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              className="w-full bg-transparent outline-none text-[#1E293B] placeholder:text-slate-400 text-sm md:text-base"
-            />
-          </div>
+          <AdminSearch
+            search={search}
+            setSearch={
+              setSearch
+            }
+          />
 
           {/* ACTION */}
-          <div className="flex flex-col md:flex-row gap-3 mb-5">
-            <button
-              onClick={
-                exportToExcel
-              }
-              className="bg-[#2563EB] hover:bg-blue-700 text-white px-5 py-3 rounded-2xl shadow-md transition font-medium w-full md:w-auto"
-            >
-              Export Excel
-            </button>
-
-            <button
-              onClick={
-                clearDoneOrders
-              }
-              className="bg-green-500 hover:bg-green-600 text-white px-5 py-3 rounded-2xl shadow-md transition font-medium w-full md:w-auto"
-            >
-              Clear Done Orders
-            </button>
-          </div>
+          <AdminActions
+            exportToExcel={
+              exportToExcel
+            }
+          />
 
           {/* FILTER */}
-          <div className="flex gap-3 overflow-x-auto pb-2 mb-8">
-            {[
-              "All",
-              "Pending",
-              "Processing",
-              "Done",
-            ].map((status) => (
-              <button
-                key={status}
-                onClick={() =>
-                  setFilterStatus(
-                    status
-                  )
-                }
-                className={`px-5 py-3 rounded-2xl whitespace-nowrap transition font-medium text-sm md:text-base ${
-                  filterStatus ===
-                  status
-                    ? "bg-[#2563EB] text-white shadow-md"
-                    : "bg-white/80 backdrop-blur-md border border-white/50 text-slate-600 hover:border-[#2563EB]"
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
+          <AdminFilter
+            filterStatus={
+              filterStatus
+            }
+            setFilterStatus={
+              setFilterStatus
+            }
+          />
 
           {/* MAIN */}
-          <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-6 xl:gap-8">
-            {/* LEFT */}
-            <div className="space-y-5 order-2 xl:order-1">
-              {/* EMPTY */}
-              {filteredOrders.length ===
-                0 && (
-                <div className="bg-white/80 backdrop-blur-md rounded-[28px] p-10 text-center shadow-md border border-white/50 text-slate-400">
-                  Belum ada order
+          <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-8">
+
+            {/* ORDER LIST */}
+            <OrderList
+              orders={
+                filteredOrders
+              }
+              selectedOrder={
+                selectedOrder
+              }
+              setSelectedOrder={
+                setSelectedOrder
+              }
+            />
+
+            {/* DETAIL */}
+            <div className="xl:sticky xl:top-6 h-fit">
+              {selectedOrder ? (
+                <OrderDetail
+                  order={
+                    selectedOrder
+                  }
+                />
+              ) : (
+                <div className="bg-white rounded-[28px] p-10 border border-blue-100 shadow-md text-center">
+                  <div className="w-16 h-16 bg-[#EFF6FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    📋
+                  </div>
+
+                  <h3 className="text-xl font-bold mb-2">
+                    Pilih Pesanan
+                  </h3>
+
+                  <p className="text-slate-500">
+                    Klik salah satu
+                    order untuk
+                    melihat detail
+                    pesanan
+                  </p>
                 </div>
               )}
-
-              {/* ORDER LIST */}
-              {filteredOrders.map(
-                (order) => (
-                  <OrderCard
-                    key={
-                      order.firestoreId
-                    }
-                    order={order}
-                    active={
-                      selectedOrder?.firestoreId ===
-                      order.firestoreId
-                    }
-                    onClick={() =>
-                      setSelectedOrder(
-                        order
-                      )
-                    }
-                  />
-                )
-              )}
             </div>
 
-            {/* RIGHT */}
-            <div className="order-1 xl:order-2 xl:sticky xl:top-6 h-fit">
-              <OrderDetail
-                order={
-                  selectedOrder
-                }
-              />
-            </div>
           </div>
         </div>
       </section>
