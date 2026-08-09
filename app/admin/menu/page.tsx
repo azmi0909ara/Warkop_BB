@@ -364,6 +364,10 @@ export default function AdminMenuPage() {
               <option>
                 Snack
               </option>
+
+              <option>
+                Makanan
+              </option>
             </select>
 
             {/* IMAGE */}
